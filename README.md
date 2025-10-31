@@ -25,6 +25,7 @@ Automatically move notes from your vault root to folders based on YAML property 
 | Property | Value   | Folder   |
 |----------|---------|----------|
 | domain   | Health  | Health   |
+<img width="707" height="407" alt="image" src="https://github.com/user-attachments/assets/f7a24b40-3541-4318-b926-1df4a664e533" />
 
 A note with:
 ```
@@ -39,3 +40,4 @@ MIT
 
 ---
 Plugin by destiny911 & GitHub Copilot.
+
