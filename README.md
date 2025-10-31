@@ -1,6 +1,6 @@
 # Obsidian Auto Move On Property Plugin
 
-Automatically move notes from your vault root to folders based on YAML property values. No scripting or manual triggers required—just set your rules in the plugin settings UI!
+Automatically move notes from your vault / ROOT to folders based on YAML property values. No scripting or manual triggers required—just set your rules in the plugin settings UI!
 
 ## Features
 
@@ -55,3 +55,4 @@ MIT
 ---
 
 Plugin by destiny911 & GitHub Copilot.
+
