@@ -40,6 +40,16 @@ domain: Health
 ```
 will be moved to the `Health/` folder.
 
+
+## Want to change from Root Folder?  
+It’s very easy to change the plugin so it works from the root or any folder (not just the vault root).
+
+How to do it:
+Remove or adjust this line in the code:
+
+`if (path.includes("/")) return; // Only act on root files`
+
+
 ## Requirements
 
 Tested with Obsidian 1.9.14 & Windows 11
@@ -55,5 +65,6 @@ MIT
 ---
 
 Plugin by destiny911 & GitHub Copilot.
+
 
 
