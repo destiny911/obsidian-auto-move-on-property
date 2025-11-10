@@ -30,8 +30,6 @@ Automatically move notes from your vault / ROOT to folders based on YAML propert
 |----------|--------|--------|
 | domain   | Health | Health |
 
-![image](https://github.com/user-attachments/assets/f7a24b40-3541-4318-b926-1df4a664e533)
-
 A note with:
 ```
 ---
@@ -39,6 +37,9 @@ domain: Health
 ---
 ```
 will be moved to the `Health/` folder.
+
+UI 
+<img width="778" height="158" alt="image" src="https://github.com/user-attachments/assets/ec7ba438-05ba-4671-99d1-1bc56bce9961" />
 
 
 ## Want to change from Root Folder?  
@@ -49,6 +50,7 @@ Remove or adjust this line in the code:
 
 `if (path.includes("/")) return; // Only act on root files`
 
+## Works with single line value and list value YAML
 
 ## Requirements
 
@@ -65,6 +67,7 @@ MIT
 ---
 
 Plugin by destiny911 & GitHub Copilot.
+
 
 
 
