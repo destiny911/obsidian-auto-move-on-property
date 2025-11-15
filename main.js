@@ -29,8 +29,14 @@ module.exports = class AutoMoveOnPropertyPlugin extends Plugin {
                 if (!file || file.extension !== "md")
                     return;
                 const path = file.path;
-                if (path.includes("/"))
-                    return;
+                // Only use folders specified in UI settings, plus root if enabled
+                let watchedFolders = (this.settings.watchedFolders || "").split(",").map(f => f.trim()).filter(f => f.length > 0);
+                if (this.settings.watchRoot) watchedFolders.push("");
+                const isWatched = watchedFolders.some(folder => {
+                    if (folder === "") return !path.includes("/");
+                    return path.startsWith(folder + "/") && path.split("/").length === folder.split("/").length + 1;
+                });
+                if (!isWatched) return;
                 const content = yield this.app.vault.read(file);
                 const match = content.match(/^---\n([\s\S]*?)\n---/);
                 if (!match)
@@ -48,7 +54,7 @@ module.exports = class AutoMoveOnPropertyPlugin extends Plugin {
                         return;
                     }
                 }
-            })));
+            }))); 
         });
     }
     loadSettings() {
