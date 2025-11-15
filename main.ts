@@ -1,7 +1,7 @@
 
 // If you see errors in VS Code, install the Obsidian API types with:
 // npm install obsidian
-import { Plugin, TFile, normalizePath, PluginSettingTab, App, Setting, TextComponent, ExtraButtonComponent } from "obsidian";
+import { Plugin, TFile, normalizePath, PluginSettingTab, App, Setting, TextComponent, ToggleComponent, ExtraButtonComponent, Notice } from "obsidian";
 
 interface MoveRule {
 	property: string;
@@ -11,12 +11,16 @@ interface MoveRule {
 
 interface AutoMoveSettings {
 	rules: MoveRule[];
+	showMoveToast: boolean;
+	showDebugToast: boolean;
 }
 
 const DEFAULT_SETTINGS: AutoMoveSettings = {
 	rules: [
 		// Example: { property: "domain", value: "Health", folder: "Health" }
-	]
+	],
+	showMoveToast: true,
+	showDebugToast: false
 };
 
 export default class AutoMoveOnPropertyPlugin extends Plugin {
@@ -33,20 +37,38 @@ export default class AutoMoveOnPropertyPlugin extends Plugin {
 				if (path.includes("/")) return; // Only act on root files
 
 				const content = await this.app.vault.read(file);
-				const match = content.match(/^---\n([\s\S]*?)\n---/);
+				const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 				if (!match) return;
 				const yaml = match[1];
 
 				for (const rule of this.settings.rules) {
-					const propMatch = yaml.match(
-						new RegExp(`^${rule.property}:[ \t]*["']?([^"'\n]+)["']?`, "m")
-					);
-					if (propMatch && propMatch[1].trim() === rule.value) {
+					const singleLineMatch = yaml.match(new RegExp(`^${rule.property}:[ \t]*["']?([^"'\n]+)["']?`, "m"));
+					let matched = false;
+					if (singleLineMatch && singleLineMatch[1].trim() === rule.value) {
+						matched = true;
+					} else {
+						// More robust list property match supporting CRLF and hyphenated keys
+						const listRegex = new RegExp(`^${rule.property}:\\s*\r?\n([\\s\\S]*?)(?=^[\\w-]+:\\s*|^---|^$)`, "m");
+						const listMatch = yaml.match(listRegex);
+						if (listMatch) {
+							const items = listMatch[1]
+								.split(/\r?\n/)
+								.map((line: string) => line.replace(/^[ \t]*-[ \t]*/, '').trim())
+								.filter((item: string) => item.length > 0);
+							if (items.includes(rule.value)) {
+								matched = true;
+							}
+						}
+					}
+					if (matched) {
 						const newFolder = normalizePath(rule.folder);
 						const newPath = `${newFolder}/${file.name}`;
 						if (path === newPath) return;
 						await this.app.vault.createFolder(newFolder).catch(() => {});
 						await this.app.fileManager.renameFile(file, newPath);
+						if (this.settings.showMoveToast) {
+							new Notice(`Moved: ${file.name} → ${newFolder}`);
+						}
 						return;
 					}
 				}
@@ -75,6 +97,26 @@ class AutoMoveSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 		containerEl.createEl("h2", { text: "Auto Move On Property Settings" });
+
+		new Setting(containerEl)
+			.setName("Show move notifications")
+			.setDesc("Display a toast notification when a file is moved")
+			.addToggle((toggle: ToggleComponent) =>
+				toggle.setValue(this.plugin.settings.showMoveToast).onChange(async (value: boolean) => {
+					this.plugin.settings.showMoveToast = value;
+					await this.plugin.saveSettings();
+				})
+			);
+
+		new Setting(containerEl)
+			.setName("Show debug notifications")
+			.setDesc("Display debug information toasts (for troubleshooting)")
+			.addToggle((toggle: ToggleComponent) =>
+				toggle.setValue(this.plugin.settings.showDebugToast).onChange(async (value: boolean) => {
+					this.plugin.settings.showDebugToast = value;
+					await this.plugin.saveSettings();
+				})
+			);
 
 		this.plugin.settings.rules.forEach((rule: MoveRule, idx: number) => {
 			const setting = new Setting(containerEl)
